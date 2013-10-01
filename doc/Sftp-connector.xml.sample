@@ -1,0 +1,6 @@
+<!-- BEGIN_INCLUDE(sftplite:get-folder) -->
+    <sftplite:get-folder hostName="localhost" port="21" userName="foo" password="bar" path="/"/>
+<!-- END_INCLUDE(sftplite:get-folder) -->
+<!-- BEGIN_INCLUDE(sftplite:check-credentials) -->
+    <sftplite:check-credentials hostName="localhost" port="21" userName="foo" password="bar"/>
+<!-- END_INCLUDE(sftplite:check-credentials) -->

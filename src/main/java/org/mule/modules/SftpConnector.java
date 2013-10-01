@@ -1,0 +1,192 @@
+/**
+ * Copyright (c) MuleSoft, Inc. All rights reserved. http://www.mulesoft.com
+ *
+ * The software in this package is published under the terms of the CPAL v1.0
+ * license, a copy of which has been included with this distribution in the
+ * LICENSE.md file.
+ */
+package org.mule.modules;
+
+import com.jcraft.jsch.*;
+import com.jcraft.jsch.ChannelSftp.LsEntry;
+import org.mule.api.annotations.Connector;
+import org.mule.api.annotations.Processor;
+import org.mule.api.annotations.param.Default;
+import org.mule.api.annotations.param.Optional;
+import org.mule.modules.exceptions.SftpLiteAuthException;
+import org.mule.modules.exceptions.SftpLiteException;
+import org.mule.modules.exceptions.SftpLiteHostException;
+
+import java.util.Vector;
+
+/**
+ * SFTP Light connector. It takes credentials in all calls. Opens and closes a connection on each
+ * call to the server. If you need a persistent connection to an SFTP server, you would be better
+ * served by using the SFTP transport in Mule.
+ *
+ * @author MuleSoft, Inc.
+ */
+@Connector(name="sftplite", schemaVersion="1.0")
+public class SftpConnector
+{
+    /**
+     * The default value for the port property in all connector operations
+     */
+    private final static String STANDARD_SFTP_PORT = "22";
+
+    /**
+     * The default folder name
+     */
+    private final static String DEFAULT_FOLDER_PATH = "/";
+
+
+    /**
+     * Tries to connect to the SFTP server just to check credentials
+     *
+     * {@sample.xml ../../../doc/Sftp-connector.xml.sample sftplite:check-credentials}
+     *
+     * @param hostName The SFTP host's name to connect to
+     * @param userName The user name to use to login
+     * @param password The password to use to login
+     * @param port the port the SFTP service is listening on
+     * @returns true if the connection was successful
+     */
+    @Processor
+    public boolean checkCredentials(
+            String hostName,
+            String userName,
+            String password,
+            @Optional @Default(STANDARD_SFTP_PORT) String port)
+    {
+        JSch jsch = new JSch();
+        Session session = null;
+        try {
+            session = jsch.getSession(userName, hostName, Integer.parseInt(port));
+            session.setPassword(password);
+            java.util.Properties config = new java.util.Properties();
+            config.put("StrictHostKeyChecking", "no");
+            session.setConfig(config);
+            session.connect();
+        } catch (JSchException e) {
+            if (!session.isConnected()) {
+                if (e.getMessage().startsWith("java.net.UnknownHostException")) {
+                    throw new SftpLiteHostException("Sftp connect failed");
+                } else {
+                    throw new SftpLiteAuthException("Sftp login failed");
+                }
+            }
+
+        }
+        return session.isConnected();
+    }
+
+    /**
+     * Get all folder and files in a Path, it defaults to "/" when path is null
+     *
+     * {@sample.xml ../../../doc/Sftp-connector.xml.sample sftplite:get-folder}
+     *
+     * @param hostName The SFTP host's name to connect to
+     * @param userName The user name to use to login
+     * @param password The password to use to login
+     * @param port the port the SFTP service is listening on
+     * @param path the path to the folder to list
+     * @return an array of Entries that represents directories and files in the path specified
+     */
+    @Processor
+    public Vector <LsEntry> getFolder(
+            String hostName,
+            String userName,
+            String password,
+            @Optional @Default(STANDARD_SFTP_PORT) String port,
+            @Optional @Default(DEFAULT_FOLDER_PATH) String path)
+    {
+        JSch jsch = new JSch();
+        Session session = null;
+        try {
+            session = jsch.getSession(userName, hostName, Integer.parseInt(port));
+            session.setPassword(password);
+            java.util.Properties config = new java.util.Properties();
+            config.put("StrictHostKeyChecking", "no");
+            session.setConfig(config);
+            session.connect();
+            Channel channel = session.openChannel("sftp");
+            channel.connect();
+            ChannelSftp command = (ChannelSftp) channel;
+
+            try {
+                Vector <LsEntry> vector = command.ls(path);
+                return vector;
+            } catch (SftpException e) {
+                throw new SftpLiteException("There was an error fetching files from SFTP");
+            } finally {
+                session.disconnect();
+            }
+        } catch (JSchException e) {
+            if (!session.isConnected()) {
+                if (e.getMessage().startsWith("java.net.UnknownHostException")) {
+                    throw new SftpLiteHostException("Sftp connect failed");
+                } else {
+                    throw new SftpLiteAuthException("Sftp login failed");
+                }
+            }
+        }
+        return null;
+    }
+
+  /*  *//**
+     * Get a single file's content as a stream
+     *
+     * {@sample.xml ../../../doc/Sftp-connector.xml.sample sftplite:get-file}
+     *
+     * @param hostName The SFTP host's name to connect to
+     * @param userName The user name to use to login
+     * @param password The password to use to login
+     * @param port the port the SFTP service is listening on
+     * @param filePath the path to the folder to list
+     * @return an array of Entries that represents directories and files in the path specified
+     *//*
+    @Processor
+    public Vector <LsEntry> getFile(
+            String hostName,
+            String userName,
+            String password,
+            String filePath,
+            @Optional @Default(STANDARD_SFTP_PORT) String port)
+    {
+        JSch jsch = new JSch();
+        Session session = null;
+        try {
+            session = jsch.getSession(userName, hostName, Integer.parseInt(port));
+            session.setPassword(password);
+            java.util.Properties config = new java.util.Properties();
+            config.put("StrictHostKeyChecking", "no");
+            session.setConfig(config);
+            session.connect();
+            Channel channel = session.openChannel("sftp");
+            channel.connect();
+            ChannelSftp command = (ChannelSftp) channel;
+
+            try {
+                Vector <LsEntry> vector = command.ls(filePath);
+                System.out.println("attrib: " + vector.get(0).getAttrs().isReg());
+                return vector;
+            } catch (SftpException e) {
+                e.printStackTrace();
+            } finally {
+                session.disconnect();
+            }
+        } catch (JSchException e) {
+            if (!session.isConnected()) {
+                if (e.getMessage().startsWith("java.net.UnknownHostException")) {
+                    throw new SftpLiteHostException("Sftp connect failed");
+                } else {
+                    throw new SftpLiteAuthException("Sftp login failed");
+                }
+            }
+        }
+        return null;
+    }*/
+
+
+
+}
