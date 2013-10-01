@@ -78,6 +78,7 @@ public class SftpConnector
             }
 
         }
+        session.disconnect();
         return session.isConnected();
     }
 
@@ -120,6 +121,7 @@ public class SftpConnector
             } catch (SftpException e) {
                 throw new SftpLiteException("There was an error fetching files from SFTP");
             } finally {
+                command.exit();
                 session.disconnect();
             }
         } catch (JSchException e) {
@@ -178,6 +180,7 @@ public class SftpConnector
             } catch (SftpException e) {
                 e.printStackTrace();
             } finally {
+                command.exit();
                 session.disconnect();
             }
         } catch (JSchException e) {
@@ -229,7 +232,7 @@ public class SftpConnector
             try {
                result = command.get(filePath);
                System.out.println("lala RESULT ES: " + result);
-               return new SftpConnectionClosingStream(session, result);
+               return new SftpConnectionClosingStream(session, command, result);
             } catch (SftpException e) {
                 e.printStackTrace();
             }

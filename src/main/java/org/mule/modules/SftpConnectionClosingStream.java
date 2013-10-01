@@ -1,5 +1,6 @@
 package org.mule.modules;
 
+import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.Session;
 
 import java.io.IOException;
@@ -18,9 +19,12 @@ public class SftpConnectionClosingStream extends InputStream {
 
     private final InputStream stream;
 
-    public SftpConnectionClosingStream(Session session, InputStream stream) {
+    private final ChannelSftp channel;
+
+    public SftpConnectionClosingStream(Session session, ChannelSftp channel, InputStream stream) {
         this.session = session;
         this.stream = stream;
+        this.channel = channel;
     }
 
     @Override
@@ -28,6 +32,7 @@ public class SftpConnectionClosingStream extends InputStream {
         int result = this.stream.read();
 
         if (result == -1) {
+            channel.exit();
             session.disconnect();
         }
         return result;
@@ -38,6 +43,7 @@ public class SftpConnectionClosingStream extends InputStream {
         int result = stream.read(bytes);
 
         if (result == -1) {
+            channel.exit();
             session.disconnect();
         }
         return result;
@@ -48,6 +54,7 @@ public class SftpConnectionClosingStream extends InputStream {
         int result = stream.read(bytes, i, i2);
 
         if (result == -1) {
+            channel.exit();
             session.disconnect();
         }
         return result;
@@ -65,6 +72,7 @@ public class SftpConnectionClosingStream extends InputStream {
 
     @Override
     public void close() throws IOException {
+        channel.exit();
         session.disconnect();
         stream.close();
     }
