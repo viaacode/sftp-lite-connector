@@ -20,9 +20,8 @@ public class SftpConnectorTest
     }
 
     @Test
-    public void testGetFolder() throws Exception
+    public void testGetFileContent() throws Exception
     {
-        connector.getFolder("localhost", "mulesoft", "mule123", "22", "/Users/mulesoft/Documents");
     }
 
 
