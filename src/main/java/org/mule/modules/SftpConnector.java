@@ -59,27 +59,27 @@ public class SftpConnector
             String password,
             @Optional @Default(STANDARD_SFTP_PORT) String port)
     {
-        JSch jsch = new JSch();
         Session session = null;
         try {
-            session = jsch.getSession(userName, hostName, Integer.parseInt(port));
-            session.setPassword(password);
-            java.util.Properties config = new java.util.Properties();
-            config.put("StrictHostKeyChecking", "no");
-            session.setConfig(config);
+            session = setSession(userName, hostName, port, password);
             session.connect();
+            return session.isConnected();
         } catch (JSchException e) {
-            if (!session.isConnected()) {
+            if (session == null) {
+                throw new SftpLiteException("Error creating SFTP session");
+            }
+            else if (!session.isConnected()) {
                 if (e.getMessage().startsWith("java.net.UnknownHostException")) {
                     throw new SftpLiteHostException("Sftp connect failed");
                 } else {
                     throw new SftpLiteAuthException("Sftp login failed");
                 }
             }
-
+        } finally {
+            if (session != null)
+                session.disconnect();
         }
-        session.disconnect();
-        return session.isConnected();
+        return false;
     }
 
     /**
@@ -102,14 +102,9 @@ public class SftpConnector
             @Optional @Default(STANDARD_SFTP_PORT) String port,
             @Optional @Default(DEFAULT_FOLDER_PATH) String path)
     {
-        JSch jsch = new JSch();
         Session session = null;
         try {
-            session = jsch.getSession(userName, hostName, Integer.parseInt(port));
-            session.setPassword(password);
-            java.util.Properties config = new java.util.Properties();
-            config.put("StrictHostKeyChecking", "no");
-            session.setConfig(config);
+            session = setSession(userName, hostName, port, password);
             session.connect();
             Channel channel = session.openChannel("sftp");
             channel.connect();
@@ -125,7 +120,10 @@ public class SftpConnector
                 session.disconnect();
             }
         } catch (JSchException e) {
-            if (!session.isConnected()) {
+            if (session == null) {
+                throw new SftpLiteException("Error creating SFTP session");
+            }
+            else if (!session.isConnected()) {
                 if (e.getMessage().startsWith("java.net.UnknownHostException")) {
                     throw new SftpLiteHostException("Sftp connect failed");
                 } else {
@@ -156,14 +154,9 @@ public class SftpConnector
             String filePath,
             @Optional @Default(STANDARD_SFTP_PORT) String port)
     {
-        JSch jsch = new JSch();
         Session session = null;
         try {
-            session = jsch.getSession(userName, hostName, Integer.parseInt(port));
-            session.setPassword(password);
-            java.util.Properties config = new java.util.Properties();
-            config.put("StrictHostKeyChecking", "no");
-            session.setConfig(config);
+            session = setSession(userName, hostName, port, password);
             session.connect();
             Channel channel = session.openChannel("sftp");
             channel.connect();
@@ -178,13 +171,16 @@ public class SftpConnector
                    return vector.get(0);
                 }
             } catch (SftpException e) {
-                e.printStackTrace();
+                throw new SftpLiteException("Error retrieving file from SFTP");
             } finally {
                 command.exit();
                 session.disconnect();
             }
         } catch (JSchException e) {
-            if (!session.isConnected()) {
+            if (session == null) {
+                throw new SftpLiteException("Error creating SFTP session");
+            }
+            else if (!session.isConnected()) {
                 if (e.getMessage().startsWith("java.net.UnknownHostException")) {
                     throw new SftpLiteHostException("Sftp connect failed");
                 } else {
@@ -215,15 +211,11 @@ public class SftpConnector
             @Optional @Default(STANDARD_SFTP_PORT) String port,
             String filePath)
     {
-        JSch jsch = new JSch();
+
         Session session = null;
         InputStream result;
         try {
-            session = jsch.getSession(userName, hostName, Integer.parseInt(port));
-            session.setPassword(password);
-            java.util.Properties config = new java.util.Properties();
-            config.put("StrictHostKeyChecking", "no");
-            session.setConfig(config);
+            session = setSession(userName, hostName, port, password);
             session.connect();
             Channel channel = session.openChannel("sftp");
             channel.connect();
@@ -231,13 +223,15 @@ public class SftpConnector
 
             try {
                result = command.get(filePath);
-               System.out.println("lala RESULT ES: " + result);
                return new SftpConnectionClosingStream(session, command, result);
             } catch (SftpException e) {
-                e.printStackTrace();
+                throw new SftpLiteException("Error retrieving file stream from SFTP");
             }
         } catch (JSchException e) {
-            if (!session.isConnected()) {
+            if (session == null) {
+                throw new SftpLiteException("Error creating SFTP session");
+            }
+            else if (!session.isConnected()) {
                 if (e.getMessage().startsWith("java.net.UnknownHostException")) {
                     throw new SftpLiteHostException("Sftp connect failed");
                 } else {
@@ -248,6 +242,15 @@ public class SftpConnector
         return null;
     }
 
+    private Session setSession (String userName, String hostName, String port, String password) throws JSchException {
+        JSch jsch = new JSch();
+        Session session = jsch.getSession(userName, hostName, Integer.parseInt(port));
+        session.setPassword(password);
+        java.util.Properties config = new java.util.Properties();
+        config.put("StrictHostKeyChecking", "no");
+        session.setConfig(config);
 
+        return session;
+    }
 
 }
