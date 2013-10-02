@@ -135,7 +135,7 @@ public class SftpConnector
     }
 
     /**
-     * Get a single file's content as a stream
+     * Get a single file's information
      *
      * {@sample.xml ../../../doc/Sftp-connector.xml.sample sftplite:get-file}
      *
