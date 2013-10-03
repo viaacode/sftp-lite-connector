@@ -8,4 +8,4 @@ Operations supported:
 * getFolder : Get all folder and files in a Path, it defaults to "/" when path is null
 * getFile : Get a single file's information
 * getFileContent :  Get a single file's content as a stream
-* uploadStream : upload a file to the SFTP server
+* uploadStream : Upload a file to the SFTP server

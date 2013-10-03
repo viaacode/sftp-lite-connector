@@ -64,7 +64,8 @@ public class SftpConnector
             session = setSession(userName, hostName, port, password);
             session.connect();
             return session.isConnected();
-        } catch (JSchException e) {
+        }
+        catch (JSchException e) {
             if (session == null) {
                 throw new SftpLiteException("Error creating SFTP session");
             }
@@ -75,7 +76,8 @@ public class SftpConnector
                     throw new SftpLiteAuthException("Sftp login failed");
                 }
             }
-        } finally {
+        }
+        finally {
             if (session != null)
                 session.disconnect();
         }
@@ -103,23 +105,22 @@ public class SftpConnector
             @Optional @Default(DEFAULT_FOLDER_PATH) String path)
     {
         Session session = null;
+        ChannelSftp command = null;
+
         try {
             session = setSession(userName, hostName, port, password);
             session.connect();
             Channel channel = session.openChannel("sftp");
             channel.connect();
-            ChannelSftp command = (ChannelSftp) channel;
+            command = (ChannelSftp) channel;
 
-            try {
-                Vector <LsEntry> vector = command.ls(path);
-                return vector;
-            } catch (SftpException e) {
-                throw new SftpLiteException("There was an error fetching files from SFTP");
-            } finally {
-                command.exit();
-                session.disconnect();
-            }
-        } catch (JSchException e) {
+            Vector <LsEntry> vector = command.ls(path);
+            return vector;
+        }
+        catch (SftpException e) {
+            throw new SftpLiteException("There was an error fetching files from SFTP");
+        }
+        catch (JSchException e) {
             if (session == null) {
                 throw new SftpLiteException("Error creating SFTP session");
             }
@@ -129,9 +130,16 @@ public class SftpConnector
                 } else {
                     throw new SftpLiteAuthException("Sftp login failed");
                 }
+            } else {
+                throw new SftpLiteException("Error connecting to SFTP server");
             }
         }
-        return null;
+        finally {
+            if (command != null)
+                command.exit();
+            if (session != null)
+                session.disconnect();
+        }
     }
 
     /**
@@ -144,7 +152,7 @@ public class SftpConnector
      * @param password The password to use to login
      * @param port the port the SFTP service is listening on
      * @param filePath the path to the file
-     * @return an Entry with the file information
+     * @return an LsEntry with the file information
      */
     @Processor
     public LsEntry getFile(
@@ -155,38 +163,44 @@ public class SftpConnector
             @Optional @Default(STANDARD_SFTP_PORT) String port)
     {
         Session session = null;
+        ChannelSftp command = null;
+
         try {
             session = setSession(userName, hostName, port, password);
             session.connect();
             Channel channel = session.openChannel("sftp");
             channel.connect();
-            ChannelSftp command = (ChannelSftp) channel;
+            command = (ChannelSftp) channel;
 
-            try {
-                if (filePath.equals("")) {
-                    filePath = "/";
-                }
-                Vector <LsEntry> vector = command.ls(filePath);
-                if (vector.size() > 0) {
-                   return vector.get(0);
-                }
-            } catch (SftpException e) {
-                throw new SftpLiteException("Error retrieving file from SFTP");
-            } finally {
-                command.exit();
-                session.disconnect();
+            if (filePath.equals(""))
+                filePath = "/";
+
+            Vector <LsEntry> vector = command.ls(filePath);
+            if (vector.size() > 0) {
+               return vector.get(0);
             }
-        } catch (JSchException e) {
+        }
+        catch (SftpException e) {
+            throw new SftpLiteException("Error retrieving file from SFTP");
+        }
+        catch (JSchException e) {
             if (session == null) {
                 throw new SftpLiteException("Error creating SFTP session");
-            }
-            else if (!session.isConnected()) {
+            } else if (!session.isConnected()) {
                 if (e.getMessage().startsWith("java.net.UnknownHostException")) {
-                    throw new SftpLiteHostException("Sftp connect failed");
+                    throw new SftpLiteHostException("Sftp connection with host failed");
                 } else {
                     throw new SftpLiteAuthException("Sftp login failed");
                 }
+            } else {
+                throw new SftpLiteException("Error connecting to SFTP server");
             }
+        }
+        finally {
+            if (command != null)
+                command.exit();
+            if(session != null)
+                session.disconnect();
         }
         return null;
     }
@@ -220,14 +234,65 @@ public class SftpConnector
             Channel channel = session.openChannel("sftp");
             channel.connect();
             ChannelSftp command = (ChannelSftp) channel;
-
-            try {
-               result = command.get(filePath);
-               return new SftpConnectionClosingStream(session, command, result);
-            } catch (SftpException e) {
-                throw new SftpLiteException("Error retrieving file stream from SFTP");
+            result = command.get(filePath);
+            return new SftpConnectionClosingStream(session, command, result);
+        }
+        catch (SftpException e) {
+            throw new SftpLiteException("Error retrieving file stream from SFTP");
+        }
+        catch (JSchException e) {
+            if (session == null) {
+                throw new SftpLiteException("Error creating SFTP session");
             }
-        } catch (JSchException e) {
+            else if (!session.isConnected()) {
+                if (e.getMessage().startsWith("java.net.UnknownHostException")) {
+                    throw new SftpLiteHostException("Sftp connecting with host failed");
+                } else {
+                    throw new SftpLiteAuthException("Sftp login failed");
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Uploads a file to the SFTP server
+     *
+     * {@sample.xml ../../../doc/Sftp-connector.xml.sample sftplite:upload-stream}
+     *
+     * @param hostName The SFTP host's name to connect to
+     * @param userName The user name to use to login
+     * @param password The password to use to login
+     * @param port the port the SFTP service is listening on
+     * @param filePath the path to the folder to store the file in
+     * @param fileName the name of the file to store
+     * @param content an InputStream with the content to store in the file
+     * @return an LsEntry with the file's information
+     */
+    @Processor
+    public LsEntry uploadStream(
+            String hostName,
+            String userName,
+            String password,
+            @Optional @Default(STANDARD_SFTP_PORT) String port,
+            String filePath,
+            String fileName,
+            @Optional @Default("#[payload]") InputStream content)
+    {
+        Session session = null;
+        ChannelSftp command = null;
+        try {
+            session = setSession(userName, hostName, port, password);
+            session.connect();
+            Channel channel = session.openChannel("sftp");
+            channel.connect();
+            command = (ChannelSftp) channel;
+            command.put(content, filePath + "/" + fileName);
+        }
+        catch (SftpException e) {
+            throw new SftpLiteException("Error storing file into SFTP server");
+        }
+        catch (JSchException e) {
             if (session == null) {
                 throw new SftpLiteException("Error creating SFTP session");
             }
@@ -239,6 +304,14 @@ public class SftpConnector
                 }
             }
         }
+        finally {
+            if (command != null)
+                command.exit();
+            if(session != null)
+                session.disconnect();
+        }
+
+
         return null;
     }
 
