@@ -86,7 +86,7 @@ public class SftpConnector
             @Optional @Default(DEFAULT_FOLDER_PATH) String path)
     {
         Session session = SftpUtils.createSession(userName, hostName, port, password);
-        ChannelSftp command = SftpUtils.setChannel(session);
+        ChannelSftp command = SftpUtils.createChannel(session);
         Vector <LsEntry> vector = SftpUtils.listFiles(session, command, path);
         SftpUtils.releaseConnection(session, command);
         return vector;
@@ -113,7 +113,7 @@ public class SftpConnector
             @Optional @Default(STANDARD_SFTP_PORT) String port)
     {
         Session session = SftpUtils.createSession(userName, hostName, port, password);
-        ChannelSftp command = SftpUtils.setChannel(session);
+        ChannelSftp command = SftpUtils.createChannel(session);
         LsEntry fileEntry = SftpUtils.getFile(session, command, filePath);
         SftpUtils.releaseConnection(session, command);
         return fileEntry;
@@ -140,7 +140,7 @@ public class SftpConnector
             String filePath)
     {
         Session session = SftpUtils.createSession(userName, hostName, port, password);
-        ChannelSftp command = SftpUtils.setChannel(session);
+        ChannelSftp command = SftpUtils.createChannel(session);
         InputStream result = SftpUtils.getFileStream(session, command, filePath);
         return new SftpConnectionClosingStream(session, command, result);
     }
@@ -170,7 +170,7 @@ public class SftpConnector
             @Optional @Default("#[payload]") InputStream content)
     {
         Session session = SftpUtils.createSession(userName, hostName, port, password);
-        ChannelSftp command = SftpUtils.setChannel(session);
+        ChannelSftp command = SftpUtils.createChannel(session);
         SftpUtils.putFile(session, command, content, filePath, fileName);
         SftpUtils.releaseConnection(session, command);
     }

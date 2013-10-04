@@ -62,7 +62,7 @@ public class SftpUtils {
             session.disconnect();
     }
 
-    public static ChannelSftp setChannel (Session session) {
+    public static ChannelSftp createChannel (Session session) {
         try {
             Channel channel = session.openChannel(SFTP);
             channel.connect();
