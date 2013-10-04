@@ -12,10 +12,8 @@ import com.jcraft.jsch.*;
 import org.mule.modules.exceptions.SftpLiteAuthException;
 import org.mule.modules.exceptions.SftpLiteException;
 import org.mule.modules.exceptions.SftpLiteHostException;
-
 import java.io.InputStream;
 import java.util.Vector;
-
 
 public class SftpUtils {
 
@@ -54,7 +52,6 @@ public class SftpUtils {
                 throw new SftpLiteException("Error connecting to SFTP server");
             }
         }
-
         return session;
     }
 
@@ -84,10 +81,7 @@ public class SftpUtils {
             releaseConnection(session, command);
             throw new SftpLiteException("Error storing file into SFTP server");
         }
-
     }
-
-
 
     public static Vector<ChannelSftp.LsEntry> listFiles (Session session, ChannelSftp command, String path) {
         try {
@@ -126,7 +120,4 @@ public class SftpUtils {
             throw new SftpLiteException("Error retrieving file stream from SFTP");
         }
     }
-
-
-
 }

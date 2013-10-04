@@ -38,8 +38,6 @@ public class SftpConnector
      */
     private final static String DEFAULT_FOLDER_PATH = "/";
 
-
-
     /**
      * Tries to connect to the SFTP server just to check credentials
      *
@@ -88,18 +86,11 @@ public class SftpConnector
             @Optional @Default(DEFAULT_FOLDER_PATH) String path)
     {
         Session session = SftpUtils.createSession(userName, hostName, port, password);
-
         ChannelSftp command = SftpUtils.setChannel(session);
-
         Vector <LsEntry> vector = SftpUtils.listFiles(session, command, path);
-
         SftpUtils.releaseConnection(session, command);
-
         return vector;
-
     }
-
-
 
     /**
      * Get a single file's information
@@ -122,13 +113,9 @@ public class SftpConnector
             @Optional @Default(STANDARD_SFTP_PORT) String port)
     {
         Session session = SftpUtils.createSession(userName, hostName, port, password);
-
         ChannelSftp command = SftpUtils.setChannel(session);
-
         LsEntry fileEntry = SftpUtils.getFile(session, command, filePath);
-
         SftpUtils.releaseConnection(session, command);
-
         return fileEntry;
     }
 
@@ -153,15 +140,10 @@ public class SftpConnector
             String filePath)
     {
         Session session = SftpUtils.createSession(userName, hostName, port, password);
-
         ChannelSftp command = SftpUtils.setChannel(session);
-
         InputStream result = SftpUtils.getFileStream(session, command, filePath);
-
         return new SftpConnectionClosingStream(session, command, result);
     }
-
-
 
     /**
      * Uploads a file to the SFTP server
@@ -188,19 +170,8 @@ public class SftpConnector
             @Optional @Default("#[payload]") InputStream content)
     {
         Session session = SftpUtils.createSession(userName, hostName, port, password);
-
         ChannelSftp command = SftpUtils.setChannel(session);
-
         SftpUtils.putFile(session, command, content, filePath, fileName);
-
         SftpUtils.releaseConnection(session, command);
-
     }
-
-
-
-
-
-
-
 }
