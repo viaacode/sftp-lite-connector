@@ -13,9 +13,7 @@ import org.mule.api.annotations.Connector;
 import org.mule.api.annotations.Processor;
 import org.mule.api.annotations.param.Default;
 import org.mule.api.annotations.param.Optional;
-import org.mule.modules.exceptions.SftpLiteAuthException;
-import org.mule.modules.exceptions.SftpLiteException;
-import org.mule.modules.exceptions.SftpLiteHostException;
+
 
 import java.io.InputStream;
 import java.util.Vector;
@@ -41,6 +39,7 @@ public class SftpConnector
     private final static String DEFAULT_FOLDER_PATH = "/";
 
 
+
     /**
      * Tries to connect to the SFTP server just to check credentials
      *
@@ -59,29 +58,13 @@ public class SftpConnector
             String password,
             @Optional @Default(STANDARD_SFTP_PORT) String port)
     {
-        Session session = null;
-        try {
-            session = setSession(userName, hostName, port, password);
-            session.connect();
-            return session.isConnected();
-        }
-        catch (JSchException e) {
-            if (session == null) {
-                throw new SftpLiteException("Error creating SFTP session");
-            }
-            else if (!session.isConnected()) {
-                if (e.getMessage().startsWith("java.net.UnknownHostException")) {
-                    throw new SftpLiteHostException("Sftp connect failed");
-                } else {
-                    throw new SftpLiteAuthException("Sftp login failed");
-                }
-            }
-        }
-        finally {
-            if (session != null)
-                session.disconnect();
-        }
-        return false;
+        Session session = SftpUtils.createSession(userName, hostName, port, password);
+
+        boolean isConnected = session.isConnected();
+
+        SftpUtils.releaseConnection(session, null);
+
+        return isConnected;
     }
 
     /**
@@ -104,43 +87,19 @@ public class SftpConnector
             @Optional @Default(STANDARD_SFTP_PORT) String port,
             @Optional @Default(DEFAULT_FOLDER_PATH) String path)
     {
-        Session session = null;
-        ChannelSftp command = null;
+        Session session = SftpUtils.createSession(userName, hostName, port, password);
 
-        try {
-            session = setSession(userName, hostName, port, password);
-            session.connect();
-            Channel channel = session.openChannel("sftp");
-            channel.connect();
-            command = (ChannelSftp) channel;
+        ChannelSftp command = SftpUtils.setChannel(session);
 
-            Vector <LsEntry> vector = command.ls(path);
-            return vector;
-        }
-        catch (SftpException e) {
-            throw new SftpLiteException("There was an error fetching files from SFTP");
-        }
-        catch (JSchException e) {
-            if (session == null) {
-                throw new SftpLiteException("Error creating SFTP session");
-            }
-            else if (!session.isConnected()) {
-                if (e.getMessage().startsWith("java.net.UnknownHostException")) {
-                    throw new SftpLiteHostException("Sftp connect failed");
-                } else {
-                    throw new SftpLiteAuthException("Sftp login failed");
-                }
-            } else {
-                throw new SftpLiteException("Error connecting to SFTP server");
-            }
-        }
-        finally {
-            if (command != null)
-                command.exit();
-            if (session != null)
-                session.disconnect();
-        }
+        Vector <LsEntry> vector = SftpUtils.listFiles(session, command, path);
+
+        SftpUtils.releaseConnection(session, command);
+
+        return vector;
+
     }
+
+
 
     /**
      * Get a single file's information
@@ -162,47 +121,15 @@ public class SftpConnector
             String filePath,
             @Optional @Default(STANDARD_SFTP_PORT) String port)
     {
-        Session session = null;
-        ChannelSftp command = null;
+        Session session = SftpUtils.createSession(userName, hostName, port, password);
 
-        try {
-            session = setSession(userName, hostName, port, password);
-            session.connect();
-            Channel channel = session.openChannel("sftp");
-            channel.connect();
-            command = (ChannelSftp) channel;
+        ChannelSftp command = SftpUtils.setChannel(session);
 
-            if (filePath.equals(""))
-                filePath = "/";
+        LsEntry fileEntry = SftpUtils.getFile(session, command, filePath);
 
-            Vector <LsEntry> vector = command.ls(filePath);
-            if (vector.size() > 0) {
-               return vector.get(0);
-            }
-        }
-        catch (SftpException e) {
-            throw new SftpLiteException("Error retrieving file from SFTP");
-        }
-        catch (JSchException e) {
-            if (session == null) {
-                throw new SftpLiteException("Error creating SFTP session");
-            } else if (!session.isConnected()) {
-                if (e.getMessage().startsWith("java.net.UnknownHostException")) {
-                    throw new SftpLiteHostException("Sftp connection with host failed");
-                } else {
-                    throw new SftpLiteAuthException("Sftp login failed");
-                }
-            } else {
-                throw new SftpLiteException("Error connecting to SFTP server");
-            }
-        }
-        finally {
-            if (command != null)
-                command.exit();
-            if(session != null)
-                session.disconnect();
-        }
-        return null;
+        SftpUtils.releaseConnection(session, command);
+
+        return fileEntry;
     }
 
     /**
@@ -225,35 +152,16 @@ public class SftpConnector
             @Optional @Default(STANDARD_SFTP_PORT) String port,
             String filePath)
     {
+        Session session = SftpUtils.createSession(userName, hostName, port, password);
 
-        Session session = null;
-        InputStream result;
-        try {
-            session = setSession(userName, hostName, port, password);
-            session.connect();
-            Channel channel = session.openChannel("sftp");
-            channel.connect();
-            ChannelSftp command = (ChannelSftp) channel;
-            result = command.get(filePath);
-            return new SftpConnectionClosingStream(session, command, result);
-        }
-        catch (SftpException e) {
-            throw new SftpLiteException("Error retrieving file stream from SFTP");
-        }
-        catch (JSchException e) {
-            if (session == null) {
-                throw new SftpLiteException("Error creating SFTP session");
-            }
-            else if (!session.isConnected()) {
-                if (e.getMessage().startsWith("java.net.UnknownHostException")) {
-                    throw new SftpLiteHostException("Sftp connecting with host failed");
-                } else {
-                    throw new SftpLiteAuthException("Sftp login failed");
-                }
-            }
-        }
-        return null;
+        ChannelSftp command = SftpUtils.setChannel(session);
+
+        InputStream result = SftpUtils.getFileStream(session, command, filePath);
+
+        return new SftpConnectionClosingStream(session, command, result);
     }
+
+
 
     /**
      * Uploads a file to the SFTP server
@@ -270,7 +178,7 @@ public class SftpConnector
      * @return an LsEntry with the file's information
      */
     @Processor
-    public LsEntry uploadStream(
+    public void uploadStream(
             String hostName,
             String userName,
             String password,
@@ -279,51 +187,20 @@ public class SftpConnector
             String fileName,
             @Optional @Default("#[payload]") InputStream content)
     {
-        Session session = null;
-        ChannelSftp command = null;
-        try {
-            session = setSession(userName, hostName, port, password);
-            session.connect();
-            Channel channel = session.openChannel("sftp");
-            channel.connect();
-            command = (ChannelSftp) channel;
-            command.put(content, filePath + "/" + fileName);
-        }
-        catch (SftpException e) {
-            throw new SftpLiteException("Error storing file into SFTP server");
-        }
-        catch (JSchException e) {
-            if (session == null) {
-                throw new SftpLiteException("Error creating SFTP session");
-            }
-            else if (!session.isConnected()) {
-                if (e.getMessage().startsWith("java.net.UnknownHostException")) {
-                    throw new SftpLiteHostException("Sftp connect failed");
-                } else {
-                    throw new SftpLiteAuthException("Sftp login failed");
-                }
-            }
-        }
-        finally {
-            if (command != null)
-                command.exit();
-            if(session != null)
-                session.disconnect();
-        }
+        Session session = SftpUtils.createSession(userName, hostName, port, password);
 
+        ChannelSftp command = SftpUtils.setChannel(session);
 
-        return null;
+        SftpUtils.putFile(session, command, content, filePath, fileName);
+
+        SftpUtils.releaseConnection(session, command);
+
     }
 
-    private Session setSession (String userName, String hostName, String port, String password) throws JSchException {
-        JSch jsch = new JSch();
-        Session session = jsch.getSession(userName, hostName, Integer.parseInt(port));
-        session.setPassword(password);
-        java.util.Properties config = new java.util.Properties();
-        config.put("StrictHostKeyChecking", "no");
-        session.setConfig(config);
 
-        return session;
-    }
+
+
+
+
 
 }

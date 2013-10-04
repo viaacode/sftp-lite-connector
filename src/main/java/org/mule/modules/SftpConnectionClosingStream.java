@@ -19,12 +19,12 @@ public class SftpConnectionClosingStream extends InputStream {
 
     private final InputStream stream;
 
-    private final ChannelSftp channel;
+    private final ChannelSftp command;
 
-    public SftpConnectionClosingStream(Session session, ChannelSftp channel, InputStream stream) {
+    public SftpConnectionClosingStream(Session session, ChannelSftp command, InputStream stream) {
         this.session = session;
         this.stream = stream;
-        this.channel = channel;
+        this.command = command;
     }
 
     @Override
@@ -32,8 +32,7 @@ public class SftpConnectionClosingStream extends InputStream {
         int result = this.stream.read();
 
         if (result == -1) {
-            channel.exit();
-            session.disconnect();
+            SftpUtils.releaseConnection(session, command);
         }
         return result;
     }
@@ -43,8 +42,7 @@ public class SftpConnectionClosingStream extends InputStream {
         int result = stream.read(bytes);
 
         if (result == -1) {
-            channel.exit();
-            session.disconnect();
+            SftpUtils.releaseConnection(session, command);
         }
         return result;
     }
@@ -54,8 +52,7 @@ public class SftpConnectionClosingStream extends InputStream {
         int result = stream.read(bytes, i, i2);
 
         if (result == -1) {
-            channel.exit();
-            session.disconnect();
+            SftpUtils.releaseConnection(session, command);
         }
         return result;
     }
@@ -72,8 +69,7 @@ public class SftpConnectionClosingStream extends InputStream {
 
     @Override
     public void close() throws IOException {
-        channel.exit();
-        session.disconnect();
+        SftpUtils.releaseConnection(session, command);
         stream.close();
     }
 
