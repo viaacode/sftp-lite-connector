@@ -76,7 +76,7 @@ public class SftpUtils {
 
     public static void putFile(Session session, ChannelSftp command, InputStream content, String filePath, String filename) {
         try {
-            command.put(content, filePath + "/" + filename);
+            command.put(content, command.getHome() + filePath + "/" + filename);
         } catch (SftpException e) {
             releaseConnection(session, command);
             throw new SftpLiteException("Error storing file into SFTP server");
@@ -85,11 +85,16 @@ public class SftpUtils {
 
     public static Vector<ChannelSftp.LsEntry> listFiles (Session session, ChannelSftp command, String path) {
         try {
-            Vector <ChannelSftp.LsEntry> vector = command.ls(path);
+            if (path == null) {
+                path = "";
+            }
+            Vector <ChannelSftp.LsEntry> vector = command.ls(command.getHome() + path);
             return vector;
         } catch (SftpException e) {
+            e.printStackTrace();
             releaseConnection(session, command);
-            throw new SftpLiteException("There was an error fetching files from SFTP");
+      //      throw new SftpLiteException("There was an error fetching files from SFTP");
+            return null;
         }
     }
 
@@ -99,7 +104,7 @@ public class SftpUtils {
             if (filePath.equals(""))
                 filePath = "/";
 
-            vector = command.ls(filePath);
+            vector = command.ls(command.getHome() + filePath);
 
             if (vector.size() > 0)
                 return vector.get(0);
@@ -113,7 +118,7 @@ public class SftpUtils {
 
     public static InputStream getFileStream (Session session, ChannelSftp command, String filePath) {
         try {
-            InputStream result = command.get(filePath);
+            InputStream result = command.get(command.getHome() + filePath);
             return result;
         } catch (SftpException e) {
             releaseConnection(session, command);
