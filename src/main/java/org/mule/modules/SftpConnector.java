@@ -7,13 +7,13 @@
  */
 package org.mule.modules;
 
-import com.jcraft.jsch.*;
+import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.ChannelSftp.LsEntry;
+import com.jcraft.jsch.Session;
 import org.mule.api.annotations.Connector;
 import org.mule.api.annotations.Processor;
 import org.mule.api.annotations.param.Default;
 import org.mule.api.annotations.param.Optional;
-
 
 import java.io.InputStream;
 import java.util.Vector;
@@ -85,6 +85,7 @@ public class SftpConnector
             @Optional @Default(STANDARD_SFTP_PORT) String port,
             @Optional @Default(DEFAULT_FOLDER_PATH) String path)
     {
+        System.out.println("LALA String path in connector getFolder: " + path);
         Session session = SftpUtils.createSession(userName, hostName, port, password);
         ChannelSftp command = SftpUtils.createChannel(session);
         Vector <LsEntry> vector = SftpUtils.listFiles(session, command, path);
@@ -112,6 +113,7 @@ public class SftpConnector
             String filePath,
             @Optional @Default(STANDARD_SFTP_PORT) String port)
     {
+        System.out.println("LALA filePath in getFile connector: " + filePath);
         Session session = SftpUtils.createSession(userName, hostName, port, password);
         ChannelSftp command = SftpUtils.createChannel(session);
         LsEntry fileEntry = SftpUtils.getFile(session, command, filePath);
@@ -139,6 +141,7 @@ public class SftpConnector
             @Optional @Default(STANDARD_SFTP_PORT) String port,
             String filePath)
     {
+        System.out.println("LALA filePath in getFileContent connector: " + filePath);
         Session session = SftpUtils.createSession(userName, hostName, port, password);
         ChannelSftp command = SftpUtils.createChannel(session);
         InputStream result = SftpUtils.getFileStream(session, command, filePath);
@@ -169,6 +172,7 @@ public class SftpConnector
             String fileName,
             @Optional @Default("#[payload]") InputStream content)
     {
+        System.out.println("LALA filePath in uploadStream connector: " + filePath);
         Session session = SftpUtils.createSession(userName, hostName, port, password);
         ChannelSftp command = SftpUtils.createChannel(session);
         SftpUtils.putFile(session, command, content, filePath, fileName);
