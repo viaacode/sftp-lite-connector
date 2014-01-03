@@ -75,11 +75,8 @@ public class SftpUtils {
     }
 
     public static void putFile(Session session, ChannelSftp command, InputStream content, String filePath, String filename) {
-        System.out.println("LALA String path in SFTPUtils putFile: " + filePath);
-        System.out.println("LALA String filename in SFTPUtils putFile: " + filename);
 
         try {
-            System.out.println("LALA String filename in SFTPUtils full path: " + command.getHome() + filePath + "/" + filename);
             command.put(content, command.getHome() + filePath + "/" + filename);
         } catch (SftpException e) {
             releaseConnection(session, command);
@@ -88,15 +85,10 @@ public class SftpUtils {
     }
 
     public static Vector<ChannelSftp.LsEntry> listFiles (Session session, ChannelSftp command, String path) {
-        System.out.println("LALA String path in SFTPUtils listFiles: " + path);
         try {
             if (path == null) {
-                System.out.println("LALA path is null in listFiles");
                 path = "";
             }
-            System.out.println("LALA listFiles command.getHome(): " + command.getHome());
-            System.out.println("LALA listFiles path: " + path);
-            System.out.println("LALA listFiles command.getHome() + path: " + command.getHome() + path);
             Vector <ChannelSftp.LsEntry> vector = command.ls(command.getHome() + path);
             return vector;
         } catch (SftpException e) {
@@ -107,13 +99,9 @@ public class SftpUtils {
 
     public static ChannelSftp.LsEntry getFile (Session session, ChannelSftp command, String filePath) {
         Vector <ChannelSftp.LsEntry> vector;
-        System.out.println("LALA String path in SFTPUtils getFile: " + filePath);
         try {
             if (filePath.equals(""))
                 filePath = "/";
-            System.out.println("LALA getFile command.getHome(): " + command.getHome());
-            System.out.println("LALA getFile path: " + filePath);
-            System.out.println("LALA getFile command.getHome() + path: " + command.getHome() + filePath);
 
             vector = command.ls(command.getHome() + filePath);
 
@@ -128,12 +116,8 @@ public class SftpUtils {
     }
 
     public static InputStream getFileStream (Session session, ChannelSftp command, String filePath) {
-        System.out.println("LALA String path in SFTPUtils getFileStream: " + filePath);
 
         try {
-            System.out.println("LALA getFileStream command.getHome(): " + command.getHome());
-            System.out.println("LALA getFileStream path: " + filePath);
-            System.out.println("LALA getFileStream command.getHome() + path: " + command.getHome() + filePath);
             InputStream result = command.get(command.getHome() + filePath);
             return result;
         } catch (SftpException e) {
