@@ -1,0 +1,18 @@
+<!-- BEGIN_INCLUDE(ftplite:get-folder) -->
+    <ftplite:get-folder hostName="localhost" port="22" userName="foo" password="bar" path="/"/>
+<!-- END_INCLUDE(ftplite:get-folder) -->
+<!-- BEGIN_INCLUDE(ftplite:check-credentials) -->
+    <ftplite:check-credentials hostName="localhost" port="22" userName="foo" password="bar"/>
+<!-- END_INCLUDE(ftplite:check-credentials) -->
+<!-- BEGIN_INCLUDE(ftplite:get-file) -->
+    <ftplite:get-file hostName="localhost" port="22" userName="foo" password="bar" filePath="/"/>
+<!-- END_INCLUDE(ftplite:get-file) -->
+<!-- BEGIN_INCLUDE(ftplite:get-file-content) -->
+    <ftplite:get-file-content hostName="localhost" port="22" userName="foo" password="bar" filePath="/"/>
+<!-- END_INCLUDE(ftplite:get-file-content) -->
+<!-- BEGIN_INCLUDE(ftplite:upload-stream) -->
+    <ftplite:upload-stream hostName="localhost" port="22" userName="foo" password="bar" filePath="/foo" fileName="bar.txt"/>
+<!-- END_INCLUDE(ftplite:upload-stream) -->
+<!-- BEGIN_INCLUDE(ftplite:file-exists) -->
+    <fftplite:file-exists hostName="localhost" port="22" userName="foo" password="bar" filePath="/foo" fileName="bar.txt"/>
+<!-- END_INCLUDE(ftplite:upload-stream) -->
