@@ -9,5 +9,3 @@ Operations supported:
 * getFile : Get a single file's information
 * getFileContent :  Get a single file's content as a stream
 * uploadStream : Upload a file to the SFTP server
-
-Modifications were made by VIAA vzw. This fork uses the Apache Commons FTP library instead of the jsch library used by the original connector.

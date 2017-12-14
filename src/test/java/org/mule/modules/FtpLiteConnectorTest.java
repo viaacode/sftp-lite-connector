@@ -13,7 +13,7 @@ import org.mule.construct.Flow;
 import org.mule.tck.AbstractMuleTestCase;
 import org.mule.tck.FunctionalTestCase;
 
-public class SftpConnectorTest extends FunctionalTestCase
+public class FtpLiteConnectorTest extends FunctionalTestCase
 {
     @Override
     protected String getConfigResources()
