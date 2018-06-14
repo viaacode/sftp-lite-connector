@@ -57,7 +57,7 @@ public class FtpLiteConnector
     {
         FTPClient client = FtpUtils.createSession(config, userName, hostName, port, password);
         FTPFile[] files = FtpUtils.listFiles(client, path);
-        FtpUtils.disconnect(client);;
+        FtpUtils.disconnect(client);
         return files;
     }
 
