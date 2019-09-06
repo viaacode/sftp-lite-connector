@@ -6,15 +6,23 @@
  * LICENSE.md file.
  */
 
-package org.mule.modules;
+package be.viaa.modules;
 
+import be.viaa.modules.exceptions.FtpLiteException;
+import be.viaa.modules.utils.Strings;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
-import org.mule.modules.exceptions.FtpLiteException;
-import org.mule.modules.exceptions.FtpLiteHostException;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
+import be.viaa.modules.exceptions.FtpLiteHostException;
 
 import java.io.*;
 import java.net.SocketException;
+import java.util.Arrays;
+import java.util.Deque;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.stream.Collectors;
 
 /**
  * Copyright (c) MuleSoft, Inc. All rights reserved. http://www.mulesoft.com
@@ -64,6 +72,8 @@ public class FtpUtils {
 
         try {
         	String fullPath = createFullPath(filePath, fileName);
+        	File file = new File(fullPath);
+            createDirectoryTree(file, client);
             client.storeFile(fullPath, content);
         } catch (IOException e) {
             disconnect(client);
@@ -135,7 +145,40 @@ public class FtpUtils {
             throw new FtpLiteException("Error retrieving file stream from SFTP");
         }
     }
-    
+
+    public static boolean createDirectoryTree(File file, FTPClient client) throws IOException {
+        Deque<String> directoryStructure = new LinkedList<>(Arrays.asList(file.getParent().split("/"))
+                .stream()
+                .filter(dir -> !dir.isEmpty())
+                .collect(Collectors.toList()));
+        Deque<String> directoryUnexistant = new LinkedList<>();
+
+        /*
+         * Scans to see which directory is already present and which directories
+         * need to be created.
+         */
+        while (!directoryStructure.isEmpty()) {
+            // If path starts with a /, add it back when changing directory (since it was removed with the filter above)
+            if (!client.changeWorkingDirectory((file.getParent().startsWith("/") ? "/" : "") + Strings.join("/", directoryStructure))) {
+                directoryUnexistant.addFirst(directoryStructure.removeLast());
+            } else {
+                break;
+            }
+        }
+
+        /*
+         * Creates the directories that need to be created
+         */
+        for (Iterator<String> iterator = directoryUnexistant.iterator(); iterator.hasNext();) {
+            String directory = iterator.next();
+
+            if (!client.makeDirectory(directory) || !client.changeWorkingDirectory(directory)) {
+                throw new IOException("could not create directory tree");
+            }
+        }
+        return true;
+    }
+
     /**
      * Creates a full path from a filepath and filename
      * @param filePath the path to where the file resides

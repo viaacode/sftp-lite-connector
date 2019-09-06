@@ -1,4 +1,4 @@
-package org.mule.modules.exceptions;
+package be.viaa.modules.exceptions;
 
 /**
  * Copyright (c) MuleSoft, Inc. All rights reserved. http://www.mulesoft.com
@@ -7,15 +7,14 @@ package org.mule.modules.exceptions;
  * license, a copy of which has been included with this distribution in the
  * LICENSE.md file.
  */
-public class FtpLiteException extends RuntimeException {
-    private static final long serialVersionUID = 8567511081840301280L;
+public class FtpLiteHostException extends RuntimeException {
+    private static final long serialVersionUID = 8167511081840301280L;
 
-    public FtpLiteException(String message) {
+    public FtpLiteHostException(String message) {
         super(message);
     }
 
-    public FtpLiteException(Throwable t) {
+    public FtpLiteHostException(Throwable t) {
         super(t);
     }
-
 }

@@ -4,19 +4,35 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>6c7daa17-b709-4fa9-b830-848afddff753</groupId>
     <artifactId>ftp-lite-connector</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.2</version>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
     <name>Lite Multitenant FTP connector</name>
     <packaging>mule-module</packaging>
 
     <parent>
         <groupId>org.mule.tools.devkit</groupId>
         <artifactId>mule-devkit-parent</artifactId>
-        <version>3.9.5</version>
+        <version>3.9.8</version>
     </parent>
 
 
     <properties>
         <devkit.studio.package.skip>false</devkit.studio.package.skip>
+        <java.version>1.8</java.version>
+        <jdk.version>${java.version}</jdk.version>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
     </properties>
 
     <dependencies>

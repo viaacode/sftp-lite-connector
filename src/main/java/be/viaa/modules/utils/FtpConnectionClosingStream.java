@@ -1,5 +1,6 @@
-package org.mule.modules;
+package be.viaa.modules.utils;
 
+import be.viaa.modules.FtpUtils;
 import org.apache.commons.net.ftp.FTPClient;
 
 import java.io.IOException;
