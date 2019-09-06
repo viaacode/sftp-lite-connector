@@ -1,4 +1,4 @@
-package org.mule.modules.exceptions;
+package be.viaa.modules.exceptions;
 
 /**
  * Copyright (c) MuleSoft, Inc. All rights reserved. http://www.mulesoft.com

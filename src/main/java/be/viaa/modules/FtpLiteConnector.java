@@ -5,8 +5,9 @@
  * license, a copy of which has been included with this distribution in the
  * LICENSE.md file.
  */
-package org.mule.modules;
+package be.viaa.modules;
 
+import be.viaa.modules.utils.FtpConnectionClosingStream;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 

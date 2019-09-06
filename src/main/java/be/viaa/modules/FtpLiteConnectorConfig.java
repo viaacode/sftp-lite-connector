@@ -1,4 +1,4 @@
-package org.mule.modules;
+package be.viaa.modules;
 
 import org.mule.api.annotations.Configurable;
 import org.mule.api.annotations.components.Configuration;
